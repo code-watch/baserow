@@ -1,4 +1,3 @@
-import itertools
 from datetime import date
 from decimal import Decimal
 from unittest.mock import patch
@@ -11,34 +10,16 @@ from baserow.contrib.database.fields.exceptions import (
     FieldTypeDoesNotExist, PrimaryFieldAlreadyExists, CannotDeletePrimaryField,
     FieldDoesNotExist, IncompatiblePrimaryFieldTypeError, CannotChangeFieldType
 )
+from baserow.contrib.database.fields.field_helpers import \
+    construct_all_possible_field_kwargs
 from baserow.contrib.database.fields.field_types import TextFieldType, LongTextFieldType
 from baserow.contrib.database.fields.handler import FieldHandler
 from baserow.contrib.database.fields.models import (
-    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField,
-    NUMBER_TYPE_CHOICES
+    Field, TextField, NumberField, BooleanField, SelectOption, LongTextField
 )
 from baserow.contrib.database.fields.registries import field_type_registry
 from baserow.contrib.database.rows.handler import RowHandler
 from baserow.core.exceptions import UserNotInGroupError
-
-
-def dict_to_pairs(field_type_kwargs):
-    pairs_dict = {}
-    for name, options in field_type_kwargs.items():
-        pairs_dict[name] = []
-        if not isinstance(options, list):
-            options = [options]
-        for option in options:
-            pairs_dict[name].append((name, option))
-    return pairs_dict
-
-
-def construct_all_possible_kwargs(field_type_kwargs):
-    pairs_dict = dict_to_pairs(field_type_kwargs)
-    args = [dict(pairwise_args) for pairwise_args in itertools.product(
-        *pairs_dict.values())]
-
-    return args
 
 
 # You must add --runslow to pytest to run this test, you can do this in intellij by
@@ -72,24 +53,7 @@ def test_can_convert_between_all_fields(data_fixture):
     # different conversion behaviour or entirely different database columns being
     # created. Here the kwargs which control these modes are enumerated so we can then
     # generate every possible type of conversion.
-    extra_kwargs_for_type = {
-        'date': {
-            'date_include_time': [True, False],
-        },
-        'number': {
-            'number_type': [number_type for number_type, _ in NUMBER_TYPE_CHOICES],
-            'number_negative': [True, False],
-        },
-        'link_row': {
-            'link_row_table': link_table
-        }
-    }
-
-    all_possible_kwargs_per_type = {}
-    for field_type_name in field_type_registry.get_types():
-        extra_kwargs = extra_kwargs_for_type.get(field_type_name, {})
-        all_possible_kwargs = construct_all_possible_kwargs(extra_kwargs)
-        all_possible_kwargs_per_type[field_type_name] = all_possible_kwargs
+    all_possible_kwargs_per_type = construct_all_possible_field_kwargs(link_table)
 
     i = 1
     for field_type_name, all_possible_kwargs in all_possible_kwargs_per_type.items():
@@ -366,8 +330,8 @@ def test_update_field_failing(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'text': FailingFieldType()}
+            field_type_registry.registry,
+            {'text': FailingFieldType()}
     ):
         with pytest.raises(CannotChangeFieldType):
             handler.update_field(user=user, field=field, new_type_name='text')
@@ -400,8 +364,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'lowercase_text': AlwaysLowercaseTextField()}
+            field_type_registry.registry,
+            {'lowercase_text': AlwaysLowercaseTextField()}
     ):
         handler.update_field(user=user,
                              field=existing_text_field,
@@ -443,8 +407,8 @@ def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fi
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
+            field_type_registry.registry,
+            {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
     ):
         # Update to the same baserow type, but due to this fields implementation of
         # get_model_field this will alter the underlying database column from type
@@ -480,8 +444,8 @@ def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'text': AlwaysReverseOnUpdateField()}
+            field_type_registry.registry,
+            {'text': AlwaysReverseOnUpdateField()}
     ):
         handler.update_field(user=user, field=existing_text_field,
                              new_type_name='text', name='new_name')
@@ -516,8 +480,8 @@ def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fix
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'text': SameTypeAlwaysReverseOnUpdateField()}
+            field_type_registry.registry,
+            {'text': SameTypeAlwaysReverseOnUpdateField()}
     ):
         handler.update_field(user=user, field=existing_text_field,
                              new_type_name='text', name='new_name')
@@ -552,8 +516,8 @@ def test_update_field_with_type_error_on_conversion_should_null_field(data_fixtu
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
+            field_type_registry.registry,
+            {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
     ):
         handler.update_field(user=user,
                              field=existing_text_field,
@@ -601,11 +565,11 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {
-            'lowercase_text': AlwaysLowercaseTextField(),
-            'long_text': ReversesWhenConvertsAwayTextField()
-        }
+            field_type_registry.registry,
+            {
+                'lowercase_text': AlwaysLowercaseTextField(),
+                'long_text': ReversesWhenConvertsAwayTextField()
+            }
     ):
         handler.update_field(user=user,
                              field=existing_field_with_old_value_prep,
@@ -649,11 +613,11 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
     handler = FieldHandler()
 
     with patch.dict(
-        field_type_registry.registry,
-        {
-            'lowercase_text': AlwaysLowercaseTextField(),
-            'long_text': ReversesWhenConvertsAwayTextField()
-        }
+            field_type_registry.registry,
+            {
+                'lowercase_text': AlwaysLowercaseTextField(),
+                'long_text': ReversesWhenConvertsAwayTextField()
+            }
     ):
         handler.update_field(user=user,
                              field=existing_field_with_old_value_prep,
