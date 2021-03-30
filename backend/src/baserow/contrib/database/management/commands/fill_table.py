@@ -43,7 +43,7 @@ class Command(BaseCommand):
                                                f"found."))
             sys.exit(1)
 
-        if options['add-columns']:
+        if 'add_columns' in options and options['add_columns']:
             self.create_a_column_for_every_type(table)
 
         model = table.get_model()

@@ -20,8 +20,8 @@ def test_fill_table_no_table():
     assert sys_exit.value.code == 1
 
     assert (
-        output.getvalue()
-        == f"The table with id {table_id_that_does_not_exist} was not found.\n"
+            output.getvalue()
+            == f"The table with id {table_id_that_does_not_exist} was not found.\n"
     )
 
 
@@ -78,3 +78,35 @@ def test_fill_table_no_empty_table(data_fixture, test_limit):
     # make sure the first row is still the same
     assert first_row_value_before == first_row_value_after
     assert len(results) == test_limit + row_length_before_random_insert
+
+
+@pytest.mark.django_db
+def test_fill_table_with_add_columns(data_fixture, ):
+    """
+    Verify that the fill_table command correctly creates columns when passing in
+    the --add-columns flag.
+    """
+
+    # create a new empty table with a field
+    user = data_fixture.create_user()
+    table = data_fixture.create_database_table(user=user)
+    text_field = data_fixture.create_text_field(user=user, table=table)
+
+    model = table.get_model()
+
+    # create data in the previously created field
+    values = {f"field_{text_field.id}": "Some Text"}
+    model.objects.create(**values)
+
+    results = model.objects.all()
+    num_rows_before_fill_type = len(results)
+    num_columns_before_fill_table = table.field_set.count()
+
+    # execute the fill_table command
+    call_command('fill_table', table.id, 10, '--add-columns')
+
+    results = model.objects.all()
+
+    table.refresh_from_db()
+    assert len(results) > num_rows_before_fill_type
+    assert table.field_set.count() > num_columns_before_fill_table
