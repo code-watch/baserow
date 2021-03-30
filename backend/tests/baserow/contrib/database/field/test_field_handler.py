@@ -330,8 +330,8 @@ def test_update_field_failing(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'text': FailingFieldType()}
+        field_type_registry.registry,
+        {'text': FailingFieldType()}
     ):
         with pytest.raises(CannotChangeFieldType):
             handler.update_field(user=user, field=field, new_type_name='text')
@@ -364,8 +364,8 @@ def test_update_field_when_underlying_sql_type_doesnt_change(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'lowercase_text': AlwaysLowercaseTextField()}
+        field_type_registry.registry,
+        {'lowercase_text': AlwaysLowercaseTextField()}
     ):
         handler.update_field(user=user,
                              field=existing_text_field,
@@ -407,8 +407,8 @@ def test_field_which_changes_its_underlying_type_will_have_alter_sql_run(data_fi
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
+        field_type_registry.registry,
+        {'text': ReversingTextFieldUsingBothVarCharAndTextSqlTypes()}
     ):
         # Update to the same baserow type, but due to this fields implementation of
         # get_model_field this will alter the underlying database column from type
@@ -444,8 +444,8 @@ def test_just_changing_a_fields_name_will_not_run_alter_sql(data_fixture):
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'text': AlwaysReverseOnUpdateField()}
+        field_type_registry.registry,
+        {'text': AlwaysReverseOnUpdateField()}
     ):
         handler.update_field(user=user, field=existing_text_field,
                              new_type_name='text', name='new_name')
@@ -480,8 +480,8 @@ def test_when_field_type_forces_same_type_alter_fields_alter_sql_is_run(data_fix
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'text': SameTypeAlwaysReverseOnUpdateField()}
+        field_type_registry.registry,
+        {'text': SameTypeAlwaysReverseOnUpdateField()}
     ):
         handler.update_field(user=user, field=existing_text_field,
                              new_type_name='text', name='new_name')
@@ -516,8 +516,8 @@ def test_update_field_with_type_error_on_conversion_should_null_field(data_fixtu
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
+        field_type_registry.registry,
+        {'throws_field': AlwaysThrowsSqlExceptionOnConversionField()}
     ):
         handler.update_field(user=user,
                              field=existing_text_field,
@@ -565,11 +565,11 @@ def test_update_field_when_underlying_sql_type_doesnt_change_with_vars(data_fixt
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {
-                'lowercase_text': AlwaysLowercaseTextField(),
-                'long_text': ReversesWhenConvertsAwayTextField()
-            }
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
     ):
         handler.update_field(user=user,
                              field=existing_field_with_old_value_prep,
@@ -613,11 +613,11 @@ def test_update_field_when_underlying_sql_type_doesnt_change_old_prep(data_fixtu
     handler = FieldHandler()
 
     with patch.dict(
-            field_type_registry.registry,
-            {
-                'lowercase_text': AlwaysLowercaseTextField(),
-                'long_text': ReversesWhenConvertsAwayTextField()
-            }
+        field_type_registry.registry,
+        {
+            'lowercase_text': AlwaysLowercaseTextField(),
+            'long_text': ReversesWhenConvertsAwayTextField()
+        }
     ):
         handler.update_field(user=user,
                              field=existing_field_with_old_value_prep,
